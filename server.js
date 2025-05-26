@@ -30,6 +30,18 @@ io.on("connection", (socket) => {
   socket.on("offer", ({ targetId, offer }) => {
     io.to(targetId).emit("offer", { senderId: socket.id, offer });
   });
+// Server-side example (Node.js + socket.io)
+socket.on("join-room", ({ roomId }) => {
+  socket.join(roomId);
+  const clients = Array.from(io.sockets.adapter.rooms.get(roomId) || []);
+  const otherClients = clients.filter(id => id !== socket.id);
+
+  // Tell new user who is already in the room
+  socket.emit("existing-users", { users: otherClients });
+
+  // Notify others that a new user has joined
+  socket.to(roomId).emit("user-joined", { peerId: socket.id });
+});
 
   // Relay answer
   socket.on("answer", ({ targetId, answer }) => {
